@@ -9,7 +9,9 @@
     <h2>Đăng nhập</h2>
 
     <p style="color:red">${loi}</p>
-
+    <p style="color:green">${param.dk == 'ok' ? 'Đăng ký thành công, hãy đăng nhập' : ''}</p>
+...
+    <a href="${pageContext.request.contextPath}/register">Chưa có tài khoản? Đăng ký</a>
     <form action="${pageContext.request.contextPath}/login" method="post">
         <div>
             Tên đăng nhập: <input type="text" name="tenDangNhap" required>

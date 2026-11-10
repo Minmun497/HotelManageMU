@@ -1,87 +1,102 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package com.mycompany.hotelmumanage.controller;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import com.mycompany.hotelmumanage.dao.RoomDAO;
+import com.mycompany.hotelmumanage.dao.RoomTypeDAO;
+import com.mycompany.hotelmumanage.model.Room;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.List;
 
-/**
- *
- * @author Dell
- */
-@WebServlet(name = "ManageRoomServlet", urlPatterns = {"/ManageRoomServlet"})
+@WebServlet("/quanly/phong")
 public class ManageRoomServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    private static final List<String> TRANG_THAI = List.of("TRONG", "DANG_O", "DANG_DON_DEP", "BAO_TRI");
+    private final RoomDAO dao = new RoomDAO();
+    private final RoomTypeDAO loaiDao = new RoomTypeDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ManageRoomServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ManageRoomServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        try {
+            String action = req.getParameter("action");
+            if ("them".equals(action)) {
+                hienForm(req, resp);
+            } else if ("sua".equals(action)) {
+                req.setAttribute("phong", dao.layTheoId(Integer.parseInt(req.getParameter("id"))));
+                hienForm(req, resp);
+            } else {
+                hienDanhSach(req, resp);
+            }
+        } catch (SQLException | NumberFormatException e) {
+            throw new ServletException(e);
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            String action = req.getParameter("action");
+            if ("xoa".equals(action)) {
+                try {
+                    dao.xoa(Integer.parseInt(req.getParameter("id")));
+                } catch (SQLIntegrityConstraintViolationException e) {
+                    req.setAttribute("loi", "Không xóa được: phòng này đã có lịch sử đặt hoặc sử dụng");
+                    hienDanhSach(req, resp);
+                    return;
+                }
+            } else if ("luu".equals(action)) {
+                Room r = new Room();
+                r.setSoPhong(req.getParameter("soPhong").trim());
+                r.setTrangThai(req.getParameter("trangThai"));
+
+                String loi = null;
+                try {
+                    String tangStr = req.getParameter("tang").trim();
+                    r.setTang(tangStr.isEmpty() ? null : Integer.valueOf(tangStr));
+                    r.setLoaiPhongId(Integer.parseInt(req.getParameter("loaiPhongId")));
+                } catch (NumberFormatException e) {
+                    loi = "Tầng phải là số và phải chọn loại phòng";
+                }
+
+                String idStr = req.getParameter("id");
+                if (idStr != null && !idStr.isEmpty()) r.setId(Integer.parseInt(idStr));
+
+                if (loi == null) {
+                    if (r.getSoPhong().isEmpty()) loi = "Số phòng không được để trống";
+                    else if (!TRANG_THAI.contains(r.getTrangThai())) loi = "Trạng thái không hợp lệ";
+                    else if (dao.tonTaiSoPhong(r.getSoPhong(), r.getId())) loi = "Số phòng đã tồn tại";
+                }
+
+                if (loi != null) {
+                    req.setAttribute("loi", loi);
+                    req.setAttribute("phong", r);
+                    hienForm(req, resp);
+                    return;
+                }
+                if (r.getId() == 0) dao.them(r); else dao.sua(r);
+            }
+            resp.sendRedirect(req.getContextPath() + "/quanly/phong");
+        } catch (SQLException e) {
+            throw new ServletException(e);
+        }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    private void hienDanhSach(HttpServletRequest req, HttpServletResponse resp)
+            throws SQLException, ServletException, IOException {
+        req.setAttribute("dsPhong", dao.layTatCa());
+        req.getRequestDispatcher("/WEB-INF/views/quanly/phong.jsp").forward(req, resp);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+    private void hienForm(HttpServletRequest req, HttpServletResponse resp)
+            throws SQLException, ServletException, IOException {
+        req.setAttribute("dsLoaiPhong", loaiDao.layTatCa());   // để vẽ ô chọn loại phòng
+        req.getRequestDispatcher("/WEB-INF/views/quanly/phong-form.jsp").forward(req, resp);
+    }
 }
