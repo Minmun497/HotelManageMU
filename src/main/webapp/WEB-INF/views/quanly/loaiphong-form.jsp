@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>Loại phòng</title></head>
@@ -15,8 +16,10 @@
                 <option value="THEO_GIO" ${loaiPhong.hinhThuc == 'THEO_GIO' ? 'selected' : ''}>Theo giờ</option>
             </select>
         </div>
-        <div>Đơn giá: <input type="text" name="donGia" value="${loaiPhong.donGia == 0 ? '' : loaiPhong.donGia}" required></div>
-        <div>Sức chứa: <input type="text" name="sucChua" value="${loaiPhong.sucChua == 0 ? '' : loaiPhong.sucChua}" required></div>
+        <c:set var="giaHienThi" value="${not empty donGiaNhap ? donGiaNhap : (loaiPhong.donGia == 0 ? '' : loaiPhong.donGia)}"/>
+        <c:set var="sucChuaHienThi" value="${not empty sucChuaNhap ? sucChuaNhap : (loaiPhong.sucChua == 0 ? '' : loaiPhong.sucChua)}"/>
+        <div>Đơn giá: <input type="text" name="donGia" value="<c:out value='${giaHienThi}'/>" required></div>
+        <div>Sức chứa: <input type="text" name="sucChua" value="<c:out value='${sucChuaHienThi}'/>" required></div>
         <div>Mô tả: <input type="text" name="moTa" value="${loaiPhong.moTa}"></div>
         <button type="submit">Lưu</button>
         <a href="${pageContext.request.contextPath}/quanly/loaiphong">Hủy</a>

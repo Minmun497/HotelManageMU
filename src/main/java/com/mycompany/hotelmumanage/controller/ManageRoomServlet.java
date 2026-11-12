@@ -77,6 +77,7 @@ public class ManageRoomServlet extends HttpServlet {
                 if (loi != null) {
                     req.setAttribute("loi", loi);
                     req.setAttribute("phong", r);
+                    req.setAttribute("tangNhap", req.getParameter("tang"));
                     hienForm(req, resp);
                     return;
                 }
@@ -88,11 +89,41 @@ public class ManageRoomServlet extends HttpServlet {
         }
     }
 
-    private void hienDanhSach(HttpServletRequest req, HttpServletResponse resp)
-            throws SQLException, ServletException, IOException {
-        req.setAttribute("dsPhong", dao.layTatCa());
-        req.getRequestDispatcher("/WEB-INF/views/quanly/phong.jsp").forward(req, resp);
+    private static final int SO_DONG = 2;   // số phòng mỗi trang (đặt cạnh TRANG_THAI)
+
+private int soNguyen(String s, int macDinh) {
+    try {
+        return Integer.parseInt(s);
+    } catch (Exception e) {
+        return macDinh;
     }
+}
+
+private void hienDanhSach(HttpServletRequest req, HttpServletResponse resp)
+        throws SQLException, ServletException, IOException {
+    String tuKhoa = req.getParameter("tuKhoa");
+    if (tuKhoa == null) tuKhoa = "";
+    tuKhoa = tuKhoa.trim();
+    String trangThai = req.getParameter("trangThai");
+    if (trangThai == null || !TRANG_THAI.contains(trangThai)) trangThai = "";
+    int loaiId = soNguyen(req.getParameter("loaiPhongId"), 0);
+    int trang = soNguyen(req.getParameter("trang"), 1);
+
+    int tongSo = dao.dem(tuKhoa, trangThai, loaiId);
+    int tongTrang = Math.max(1, (int) Math.ceil((double) tongSo / SO_DONG));
+    if (trang < 1) trang = 1;
+    if (trang > tongTrang) trang = tongTrang;
+
+    req.setAttribute("dsPhong", dao.timKiem(tuKhoa, trangThai, loaiId, trang, SO_DONG));
+    req.setAttribute("dsLoaiPhong", loaiDao.layTatCa());
+    req.setAttribute("tuKhoa", tuKhoa);
+    req.setAttribute("trangThai", trangThai);
+    req.setAttribute("loaiPhongId", loaiId);
+    req.setAttribute("trang", trang);
+    req.setAttribute("tongTrang", tongTrang);
+    req.setAttribute("tongSo", tongSo);
+    req.getRequestDispatcher("/WEB-INF/views/quanly/phong.jsp").forward(req, resp);
+}
 
     private void hienForm(HttpServletRequest req, HttpServletResponse resp)
             throws SQLException, ServletException, IOException {

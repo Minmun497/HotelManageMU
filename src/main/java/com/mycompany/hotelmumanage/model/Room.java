@@ -7,6 +7,7 @@ public class Room {
     private String trangThai;    // TRONG / DANG_O / DANG_DON_DEP / BAO_TRI
     private int loaiPhongId;
     private String tenLoai;      // lấy từ bảng loai_phong qua JOIN, chỉ để hiển thị
+    private long donGia;   
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -20,4 +21,6 @@ public class Room {
     public void setLoaiPhongId(int loaiPhongId) { this.loaiPhongId = loaiPhongId; }
     public String getTenLoai() { return tenLoai; }
     public void setTenLoai(String tenLoai) { this.tenLoai = tenLoai; }
+    public long getDonGia() { return donGia; }
+    public void setDonGia(long donGia) { this.donGia = donGia; }
 }

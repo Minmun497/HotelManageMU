@@ -10,7 +10,7 @@
         <input type="hidden" name="action" value="luu">
         <input type="hidden" name="id" value="${phong.id == 0 ? '' : phong.id}">
         <div>Số phòng: <input type="text" name="soPhong" value="${phong.soPhong}" required></div>
-        <div>Tầng: <input type="text" name="tang" value="${phong.tang}"></div>
+        <div>Tầng: <input type="text" name="tang" value="<c:out value='${not empty tangNhap ? tangNhap : phong.tang}'/>"></div>
         <div>Loại phòng:
             <select name="loaiPhongId">
                 <c:forEach var="loai" items="${dsLoaiPhong}">

@@ -71,6 +71,8 @@ public class ManageRoomTypeServlet extends HttpServlet {
                 if (loi != null) {
                     req.setAttribute("loi", loi);
                     req.setAttribute("loaiPhong", r);
+                    req.setAttribute("donGiaNhap", req.getParameter("donGia")); 
+                    req.setAttribute("sucChuaNhap", req.getParameter("sucChua"));
                     hienForm(req, resp);
                     return;
                 }
